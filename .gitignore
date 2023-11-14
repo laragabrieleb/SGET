@@ -5,3 +5,6 @@ build/
 tmp/
 temp/
 data-source.ts
+src/scripts/client_secrets.json
+package.json
+package-lock.json
