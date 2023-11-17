@@ -8,10 +8,6 @@ from pydrive.drive import GoogleDrive
 from io import StringIO
 
 #conexao com google drive API
-gauth = GoogleAuth()
-GoogleAuth.DEFAULT_SETTINGS['client_config_file'] = 'src/scripts/client_secrets.json'
-gauth.LocalWebserverAuth()  
-drive = GoogleDrive(gauth)
 
 #parametro informado no expressjs antes de chamar o script
 jsonUploads = sys.argv[1]
@@ -21,15 +17,10 @@ uploads = json.loads(jsonUploads, object_hook=lambda d: SimpleNamespace(**d))
 
 for upload in uploads:
     # busco no drive o arquivo pelo nome, e o drive retorna uma lista
-    file_list = drive.ListFile({'q': f"title='{upload.nome}.{upload.template.extensao}'"}).GetList()
-
-    if file_list:
+    with open(upload.caminho, 'r') as file:
         
-        #o drive retorna lista, porém só pode ter 1 arquivo com o msm nome
-        file_obj = file_list[0]
-
         # baixar o arquivo
-        file_content = file_obj.GetContentString()
+        file_content = file.GetContentString()
 
         try:
             # transformo em CSV caso seja CSV
@@ -57,7 +48,6 @@ for upload in uploads:
                     print(f"Erro: Não foi possível ler {upload.caminho}. Erro: {e}")
         except Exception as e:
             print(f"Erro: Não foi possível ler {upload.caminho}. Erro: {e}")
-
 
 uploads_json = json.dumps(uploads, default=lambda o: o.__dict__)
 print(uploads_json.encode('utf-8').decode('cp1252'))

@@ -102,6 +102,17 @@ export class TemplateController {
                      });
                 }
 
+                var templateExistente = this.templatesRepository.findBy({
+                    nome: nome
+                });
+
+                if(!templateExistente){
+                    return response.status(400).send({
+                        mensagem: 'Já existe uma template com este nome!',
+                        status: 400
+                    });
+                }
+
                 const usuario = await this.userRepository.findOneBy({
                     id: idUsuario
                     })
@@ -166,14 +177,10 @@ export class TemplateController {
 
                 //tratamento 
                 script.stdout.on('data', async (data) => {
-                    console.log(`url do arquivo: ${data}`);
-                    let text = data.toString();
+                    console.log(`diretorio do arquivo: ${data}`);
+                    let diretorio = data.toString();
 
-                    let lines = text.split('\r')
-                    let last_line = lines[lines.length - 2]
-
-                    // atualizar com a URL do arquivo
-                    templateDatabase.caminho = last_line;
+                    templateDatabase.caminho = diretorio;
                   
                     try {
                       await this.templatesRepository.save(templateDatabase);
@@ -284,14 +291,10 @@ export class TemplateController {
 
                 //tratamento 
                 script.stdout.on('data', async (data) => {
-                    console.log(`url do arquivo: ${data}`);
-                    let text = data.toString();
+                    console.log(`diretorio do arquivo: ${data}`);
+                    let diretorio = data.toString();
 
-                    let lines = text.split('\r')
-                    let last_line = lines[lines.length - 2]
-
-                    // atualizar com a URL do arquivo
-                    templateDb.caminho = last_line;
+                    templateDb.caminho = diretorio;
                   
                     try {
                       await this.templatesRepository.save(templateDb);

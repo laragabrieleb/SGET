@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import os
 from types import NoneType, SimpleNamespace
 import pandas as pd
 from pydrive.auth import GoogleAuth
@@ -12,14 +13,25 @@ template = sys.argv[1]
 nome = sys.argv[2]
 base64string = sys.argv[3]
 colunas = sys.argv[4]
+pasta = sys.argv[5]
 
 df = pd.DataFrame()
-print(template, file=sys.stdout)
+
 template = json.loads(template, object_hook=lambda d: SimpleNamespace(**d))
 colunas = json.loads(colunas)
 
 nomeArquivo = nome + '.' + template.extensao.lower()
 
+diretorio = 'arquivos/' + pasta
+
+diretorioProjeto = os.path.dirname(__file__)
+
+#cria a pasta caso nao exista
+diretorioFinal = os.path.join(diretorioProjeto, diretorio)
+os.makedirs(diretorioFinal, exist_ok=True)
+
+
+diretorioArquivo = os.path.join(diretorioFinal, nomeArquivo)
 with open(base64string, 'rb') as file:
     base64_data = file.read()
 
@@ -32,7 +44,7 @@ elif template.extensao.lower() == 'xlsx':
     df = pd.read_excel(io.BytesIO(binary_data), engine='openpyxl')
 elif template.extensao.lower() == 'xls':
     # For XLS files, you need the 'xlrd' engine
-    df = pd.read_excel(io.BytesIO(binary_data), engine='xlrd')
+    df = pd.read_excel(io.BytesIO(binary_data), engine='openpyxl')
 
 # verifica se todos os valores da coluna são numéricos
 def is_numeric_column(series, nomeColuna):
@@ -45,8 +57,6 @@ def is_numeric_column(series, nomeColuna):
         sys.exit(1)
         
 qtdLinhasArquivo = len(df.index) 
-
-print(qtdLinhasArquivo, file=sys.stdout)
 
 if(template.minLinhas is not None and qtdLinhasArquivo < template.minLinhas):
     erro = f"Erro: O arquivo possui menos de {template.minLinhas} linhas!"
@@ -82,25 +92,13 @@ for coluna in colunas:
         lambda x: '{:.2%}'.format(float(x) / 100) if not pd.isna(x) else '')
 
 if template.extensao.lower() == 'csv':
-    df.to_csv(nomeArquivo, sep=';', index=False)
+    df.to_csv(diretorioArquivo, sep=';', index=False)
 else:
-    df.to_excel(nomeArquivo)
+    df.to_excel(diretorioArquivo)
     #CSV E XLSX - OK
     # FALTA XLS
     
-gauth = GoogleAuth()
-GoogleAuth.DEFAULT_SETTINGS['client_config_file'] = 'src/scripts/client_secrets.json'
-gauth.LocalWebserverAuth()  
-drive = GoogleDrive(gauth)
-
-file_drive = drive.CreateFile({'title': nomeArquivo})
-
-file_drive.SetContentFile(nomeArquivo)
-file_drive.Upload()
-    
-file_url = file_drive['webContentLink']
-    
-print(file_url, file=sys.stdout)
+print(diretorioArquivo)
 
 sys.exit(0)
 

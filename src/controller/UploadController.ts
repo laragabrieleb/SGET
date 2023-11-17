@@ -5,7 +5,8 @@ import { Usuarios } from "../entity/Usuarios";
 import { Uploads } from "../entity/Uploads";
 import { Colunas } from "../entity/Colunas";
 import { Categorias } from "../entity/Categorias";
-
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class UploadsController {
     private uploadsRepository = AppDataSource.getRepository(Uploads);
@@ -17,16 +18,37 @@ export class UploadsController {
     //mostrar no select
 
     async listarArquivos(request: Request, response: Response, next: NextFunction) {
-        let uploads = await this.uploadsRepository
+        let arquivos = await this.uploadsRepository
         .createQueryBuilder('uploads')
         .leftJoinAndSelect('uploads.categoria', 'categoria')
         .where('uploads.categoriaId = categoria.id')
+        .leftJoinAndSelect('uploads.template', 'template')
+        .where('uploads.templateId = template.id')
         .getMany();
+
+        let arquivosComBase64: any[] = [];
+
+        arquivos.forEach(item => {
+            let novoArquivo = item as any;
+
+            novoArquivo.caminho = novoArquivo.caminho.replace(/\\/g, '\\\\')
+            // Ler o arquivo e converter para base64
+            
+                let arquivoBuffer = fs.readFileSync(novoArquivo.caminho);
+                let arquivoBase64 = arquivoBuffer.toString('base64');
+        
+                // Armazenar a representação base64 no campo base64 de novaTemplate
+                novoArquivo.base64 = arquivoBase64;
+
+                //armazeno a template com base64 no array 
+                arquivosComBase64.push(novoArquivo);
+            
+        });
 
         return response.status(200).send({
             mensagem: 'Uploads obtidos com sucesso.',
             status: 200,
-            uploads: uploads
+            uploads: arquivosComBase64
          });
     }
 
@@ -80,13 +102,32 @@ export class UploadsController {
             });
 
             script.on('close', async (code) => {
-              console.log(`python finalizou com código:  ${code}`);
-             
-              return response.status(200).send({
-                mensagem: 'Uploads obtidos com sucesso.',
-                status: 200,
-                uploads: uploads
-             });
+                console.log(`python finalizou com código:  ${code}`);
+                
+                let arquivosComBase64: any[] = [];
+
+                uploads.forEach(item => {
+                    let novoArquivo = item as any;
+
+                    novoArquivo.caminho = novoArquivo.caminho.replace(/\\/g, '\\\\')
+                    // Ler o arquivo e converter para base64
+            
+                    let arquivoBuffer = fs.readFileSync(novoArquivo.caminho);
+                    let arquivoBase64 = arquivoBuffer.toString('base64');
+        
+                    // Armazenar a representação base64 no campo base64 de novaTemplate
+                    novoArquivo.base64 = arquivoBase64;
+
+                    //armazeno a template com base64 no array 
+                    arquivosComBase64.push(novoArquivo);
+            
+                });
+
+                return response.status(200).send({
+                    mensagem: 'Uploads obtidos com sucesso.',
+                    status: 200,
+                    uploads: arquivosComBase64
+                });
             });
     }
 
@@ -100,12 +141,33 @@ export class UploadsController {
         .leftJoinAndSelect('uploads.categoria', 'categoria')
         .where('uploads.categoriaId = categoria.id')
         .where(`uploads.usuarioId = ${idUsuario}`)
+        .leftJoinAndSelect('uploads.template', 'template')
+        .where('uploads.templateId = template.id')
         .getMany();
         
 
+        let arquivosDoUsuarioComBase64: any[] = [];
+
+        arquivosDoUsuario.forEach(item => {
+            let novoArquivo = item as any;
+
+            novoArquivo.caminho = novoArquivo.caminho.replace(/\\/g, '\\\\')
+            // Ler o arquivo e converter para base64
+            
+                let arquivoBuffer = fs.readFileSync(novoArquivo.caminho);
+                let arquivoBase64 = arquivoBuffer.toString('base64');
+        
+                // Armazenar a representação base64 no campo base64 de novaTemplate
+                novoArquivo.base64 = arquivoBase64;
+
+                //armazeno a template com base64 no array 
+                arquivosDoUsuarioComBase64.push(novoArquivo);
+            
+        });
+
           return response.status(200).json({
             mensagem: 'Arquivos encontrados com sucesso.', 
-            uploads: arquivosDoUsuario,
+            uploads: arquivosDoUsuarioComBase64,
 
             status: 200 
            });
@@ -157,16 +219,35 @@ export class UploadsController {
             situacao: true
         });
 
+        let templatesComBase64: any[] = [];
+
+        templates.forEach(item => {
+            let novaTemplate = item as any;
+
+            novaTemplate.caminho = novaTemplate.caminho.replace(/\\/g, '\\\\')
+            // Ler o arquivo e converter para base64
+            
+                let arquivoBuffer = fs.readFileSync(novaTemplate.caminho);
+                let arquivoBase64 = arquivoBuffer.toString('base64');
+        
+                // Armazenar a representação base64 no campo base64 de novaTemplate
+                novaTemplate.base64 = arquivoBase64;
+
+                //armazeno a template com base64 no array 
+                templatesComBase64.push(novaTemplate);
+            
+        });
+
         return response.status(200).send({
             mensagem: 'Templates obtidas com sucesso.',
             status: 200,
-            templates: templates
+            templates: templatesComBase64
          });
     }
 
     async publicarArquivo(request: Request, response: Response, next: NextFunction) {
 
-        const { nome, descricao, templateId, categoriaId, base64, idUsuario } = request.body;
+        const { nome, descricao, templateId, categoriaId, base64, idUsuario, pasta } = request.body;
 
         let usuarios = await this.usuarioRepository.findBy({
             id: idUsuario
@@ -200,10 +281,19 @@ export class UploadsController {
                 status: 400
              });
         }
-        
+
+        var arquivoExistente = this.uploadsRepository.findBy({
+            nome: nome
+        });
+
+        if(!arquivoExistente){
+            return response.status(400).send({
+                mensagem: 'Já existe um arquivo com este nome!',
+                status: 400
+            });
+        }
+
         let template = templates[0];
-
-
 
         if(!template.situacao){
 
@@ -256,20 +346,14 @@ export class UploadsController {
             const tempFilePath = path.join(directoryPath, 'base64data.txt');
             fs.writeFileSync(tempFilePath, base64);
 
-            const script = spawn('python', [caminhoScript, JSON.stringify(template), nome, tempFilePath, jsonColunas ]);
+            const script = spawn('python', [caminhoScript, JSON.stringify(template), nome, tempFilePath, jsonColunas, pasta ]);
             let erros = '';
             //tratamento 
-            let url = '';
+            let diretorio = '';
             script.stdout.on('data', async (data) => {
-                console.log(`url do arquivo: ${data}`);
-                let text = data.toString();
-
-                if(text.includes('\r')){
-                    let lines = text.split('\r')
-                    url = lines[lines.length - 2]
-
-                }
-
+                
+                console.log(`diretório do arquivo: ${data}`);
+                 diretorio = data.toString();
                 
               });
 
@@ -293,7 +377,7 @@ export class UploadsController {
                 const upload = new Uploads();
                 upload.nome = nome;
                 upload.descricao = descricao;
-                upload.caminho = url;
+                upload.caminho = diretorio;
                 upload.criadopor = usuario.matricula;
                 upload.dataUpload = new Date();
                 upload.template = template;
@@ -316,33 +400,5 @@ export class UploadsController {
               return response.status(500).json({ mensagem: 'Erro ao criar template: ' + error.message, status: 500 });
             }
             });
-    }
-
-    //tenho que ver a parte de armazenamento
-    async dadosUpload(request: Request, response: Response, next: NextFunction) {
-
-        const { nome, descricao, caminho } = request.body;
-
-        if(!nomeTemplateEhValido(nome)){
-            return response.status(400).send({
-                mensagem: 'O nome do template deve conter no máximo 50 caracteres',
-                status: 400
-             });
-        }
-
-        if(!descricaoTemplateEhValida(descricao)){
-            return response.status(400).send({
-                mensagem: 'A descrição do template deve conter no máximo 100 caracteres',
-                status: 400
-             });
-        }
-
-        return response.status(200).send({
-            mensagem: 'Upload feito com sucesso.',
-            status: 200,
-            uploads: nome
-         });
-    }
-
-    
+    } 
 }
