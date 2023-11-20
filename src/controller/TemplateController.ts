@@ -180,7 +180,8 @@ export class TemplateController {
                     console.log(`diretorio do arquivo: ${data}`);
                     let diretorio = data.toString();
 
-                    templateDatabase.caminho = diretorio;
+                    //remove espaços em branco
+                    templateDatabase.caminho = diretorio.replace(/\s/g, '');;
                   
                     try {
                       await this.templatesRepository.save(templateDatabase);
@@ -294,7 +295,8 @@ export class TemplateController {
                     console.log(`diretorio do arquivo: ${data}`);
                     let diretorio = data.toString();
 
-                    templateDb.caminho = diretorio;
+                    //remove espaços em branco
+                    templateDb.caminho = diretorio.replace(/\s/g, '');;
                   
                     try {
                       await this.templatesRepository.save(templateDb);

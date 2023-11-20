@@ -20,7 +20,7 @@ for upload in uploads:
     with open(upload.caminho, 'r') as file:
         
         # baixar o arquivo
-        file_content = file.GetContentString()
+        file_content = file.read()
 
         try:
             # transformo em CSV caso seja CSV

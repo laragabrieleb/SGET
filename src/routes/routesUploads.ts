@@ -32,6 +32,18 @@ export const routesUploads = [{
     //tipo de requisicao (GET, POST, PUT, DELETE)
     method: "get",
     //rota informada na url pelo cliente
+    route: "/upload/obter-relatorio",
+    //classe que o servidor deve procurar 
+    controller: UploadsController,
+    //método que o servidor vai executar para gerar a resposta ao cliente
+    action: "obterRelatorioDashboard"
+},
+{
+    //DEFINE as rotas que o cliente pode requisitar ao servidor.
+
+    //tipo de requisicao (GET, POST, PUT, DELETE)
+    method: "get",
+    //rota informada na url pelo cliente
     route: "/upload/listar-arquivos",
     //classe que o servidor deve procurar 
     controller: UploadsController,

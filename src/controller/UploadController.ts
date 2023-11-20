@@ -131,6 +131,42 @@ export class UploadsController {
             });
     }
 
+    async obterRelatorioDashboard(request: Request, response: Response, next: NextFunction) {
+
+        const spawn = require('child_process').spawn;
+        const path = require('path'); 
+
+        //caminho para o script em py
+        let relatorio:any;
+
+        const caminhoScript = path.join(__dirname, '../scripts/obter-dados-dashboard.py');
+
+            //spawn para iniciar um novo processo Python
+            const script = spawn('python', [caminhoScript ]);
+
+
+            script.stdout.on('data', async (data) => {
+                //script retorna qtd de arquivos e templates gerados por mes
+                console.log(`RELATÓRIO:${data}`)
+                
+                    relatorio = JSON.parse(data);
+              });
+
+            script.stderr.on('data', (data) => {
+              console.log(`erro: ${data}`);
+            });
+
+            script.on('close', async (code) => {
+                console.log(`python finalizou com código:  ${code}`);
+                
+                return response.status(200).send({
+                    mensagem: 'Uploads obtidos com sucesso.',
+                    status: 200,
+                    uploads: relatorio
+                });
+            });
+    }
+
     async listarArquivosUsuario(request: Request, response: Response, next: NextFunction){
         //pegar id do usuário logado
         //vem pela url quando é get = em obter template
@@ -377,7 +413,7 @@ export class UploadsController {
                 const upload = new Uploads();
                 upload.nome = nome;
                 upload.descricao = descricao;
-                upload.caminho = diretorio;
+                upload.caminho = diretorio.replace(/\s/g, '');
                 upload.criadopor = usuario.matricula;
                 upload.dataUpload = new Date();
                 upload.template = template;

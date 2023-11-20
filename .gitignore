@@ -8,3 +8,4 @@ data-source.ts
 src/scripts/client_secrets.json
 package.json
 package-lock.json
+src/scripts/obter-dados-dashboard.py
