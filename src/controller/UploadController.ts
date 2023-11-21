@@ -148,7 +148,7 @@ export class UploadsController {
             script.stdout.on('data', async (data) => {
                 //script retorna qtd de arquivos e templates gerados por mes
                 console.log(`RELATÓRIO:${data}`)
-                
+
                     relatorio = JSON.parse(data);
               });
 
@@ -318,11 +318,11 @@ export class UploadsController {
              });
         }
 
-        var arquivoExistente = this.uploadsRepository.findBy({
+        var arquivoExistente = await this.uploadsRepository.findBy({
             nome: nome
         });
 
-        if(!arquivoExistente){
+        if(arquivoExistente.length > 0){
             return response.status(400).send({
                 mensagem: 'Já existe um arquivo com este nome!',
                 status: 400
@@ -344,7 +344,7 @@ export class UploadsController {
             id: categoriaId
         });
 
-        if(categorias == undefined){
+        if(categorias.length == 0){
             return response.status(400).send({
                 mensagem: 'categoria não encontrada!',
                 status: 400

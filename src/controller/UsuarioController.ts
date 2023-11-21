@@ -102,6 +102,13 @@ export class UsuarioController {
                     });
               }
 
+              if (!usuario.situacao) {
+                return response.status(401).send({
+                     mensagem: 'Acesso bloqueado! Status: Usuário Desativado' ,
+                     status: 401
+                    });
+              }
+
               //obter permissoes do usuário a partir da tabela usuarioPermissoes
             const usuarioPermissoes = await this.usuarioPermissaoRepository
               .createQueryBuilder('usuarioPermissoes')

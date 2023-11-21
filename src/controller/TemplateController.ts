@@ -102,13 +102,13 @@ export class TemplateController {
                      });
                 }
 
-                var templateExistente = this.templatesRepository.findBy({
+                var templateExistente = await this.templatesRepository.findBy({
                     nome: nome
                 });
 
-                if(!templateExistente){
+                if(templateExistente.length > 0){
                     return response.status(400).send({
-                        mensagem: 'Já existe uma template com este nome!',
+                        mensagem: 'Já existe um template com este nome!',
                         status: 400
                     });
                 }
@@ -242,6 +242,17 @@ export class TemplateController {
                     mensagem: 'A descrição do template deve conter no máximo 100 caracteres',
                     status: 400
                  });
+            }
+
+            var templateExistente = await this.templatesRepository.findOneBy({
+                nome: template.nome
+            });
+
+            if(templateExistente && templateExistente.id != template.id){
+                return response.status(400).send({
+                    mensagem: 'Já existe um template com este nome!',
+                    status: 400
+                });
             }
 
             if(template.maxLinhas != undefined && template.maxLinhas != '')
