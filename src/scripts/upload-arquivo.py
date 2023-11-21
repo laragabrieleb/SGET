@@ -43,7 +43,6 @@ elif template.extensao.lower() == 'xlsx':
     # For XLSX files, you need to use the 'openpyxl' engine
     df = pd.read_excel(io.BytesIO(binary_data), engine='openpyxl')
 elif template.extensao.lower() == 'xls':
-    # For XLS files, you need the 'xlrd' engine
     df = pd.read_excel(io.BytesIO(binary_data), engine='openpyxl')
 
 # verifica se todos os valores da coluna são numéricos
@@ -91,10 +90,12 @@ for coluna in colunas:
         df[f'{coluna["nome"]}'] = df.loc[0:, coluna['nome']].apply(
         lambda x: '{:.2%}'.format(float(x) / 100) if not pd.isna(x) else '')
 
-if template.extensao.lower() == 'csv':
-    df.to_csv(diretorioArquivo, sep=';', index=False)
+if(template.extensao.lower() == 'csv'):
+        df.to_csv(diretorioArquivo, sep=';', index=False)
+elif(template.extensao.lower() == 'xlsx'):
+        df.to_excel(diretorioArquivo)
 else:
-    df.to_excel(diretorioArquivo)
+        df.to_excel(diretorioArquivo, index=False, engine='openpyxl')
     #CSV E XLSX - OK
     # FALTA XLS
     

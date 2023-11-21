@@ -33,8 +33,10 @@ for coluna in colunas:
     
     if(tipoTemplate.lower() == 'csv'):
         df.to_csv(diretorioArquivo, sep=';', index=False)
-    else:
+    elif(tipoTemplate.lower() == 'xlsx'):
         df.to_excel(diretorioArquivo)
+    else:
+        df.to_excel(diretorioArquivo, index=False, engine='openpyxl')
     
     
 print(diretorioArquivo)
