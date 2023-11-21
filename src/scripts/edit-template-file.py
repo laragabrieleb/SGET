@@ -37,7 +37,6 @@ for coluna in colunas:
         df.to_csv(diretorioArquivo, sep=';', index=False, mode='w')
         
     elif(tipoTemplate.lower() == 'xlsx'):
-        df.to_excel(diretorioArquivo, mode='w')
         with pd.ExcelWriter(diretorioArquivo, mode='w') as writer:
             df.to_excel(writer, index=False)
     else:

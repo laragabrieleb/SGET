@@ -16,7 +16,6 @@ jsonUploads = sys.argv[1]
 uploads = json.loads(jsonUploads, object_hook=lambda d: SimpleNamespace(**d))
 
 for upload in uploads:
-    # busco no drive o arquivo pelo nome, e o drive retorna uma lista
     with open(upload.caminho, 'r') as file:
         
         # baixar o arquivo

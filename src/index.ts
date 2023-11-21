@@ -16,7 +16,8 @@ AppDataSource.initialize().then(async () => {
     app.use(cors()); //para permitir a comunicação com o servidor com outras URL
     //permite que seu servidor Express aceite solicitações de diferentes origens
 
-    app.use(express.json());
+    
+    app.use(bodyParser.json({ limit: '900mb' }));
     // register express routes from defined application routes
     routesUsuarios.forEach(route => {
         (app as any)[route.method](route.route, (req: Request, res: Response, next: Function) => {

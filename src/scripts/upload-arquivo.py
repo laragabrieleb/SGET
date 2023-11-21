@@ -93,7 +93,7 @@ for coluna in colunas:
 if(template.extensao.lower() == 'csv'):
         df.to_csv(diretorioArquivo, sep=';', index=False)
 elif(template.extensao.lower() == 'xlsx'):
-        df.to_excel(diretorioArquivo)
+        df.to_excel(diretorioArquivo, index=False)
 else:
         df.to_excel(diretorioArquivo, index=False, engine='openpyxl')
     #CSV E XLSX - OK

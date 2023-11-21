@@ -69,41 +69,8 @@ export class UploadsController {
               .where('uploads.templateId = template.id')
               .getMany();
 
-        console.log(uploads);
+            console.log(uploads);
 
-        const spawn = require('child_process').spawn;
-        const path = require('path'); 
-
-        //caminho para o script em py
-        const caminhoScript = path.join(__dirname, '../scripts/get-file-lines.py');
-
-            //spawn para iniciar um novo processo Python
-            let jsonUploads = JSON.stringify(uploads);
-            const script = spawn('python', [caminhoScript, jsonUploads ]);
-
-
-            script.stdout.on('data', async (data) => {
-                //uploads com a propriedade qtdLinhas preenchida,
-                //o python retorna como JSON então converto de volta pra objeto
-
-                //filtrar apenas o json na mensagem de retorno
-                const regex = /\[\{.*?\}\]/s;
-                let result = data.toString();
-                const match = result.match(regex);
-
-                if (match) {
-                    const jsonString = match[0];
-                    uploads = JSON.parse(jsonString);
-                } 
-              });
-
-            script.stderr.on('data', (data) => {
-              console.log(`erro: ${data}`);
-            });
-
-            script.on('close', async (code) => {
-                console.log(`python finalizou com código:  ${code}`);
-                
                 let arquivosComBase64: any[] = [];
 
                 uploads.forEach(item => {
@@ -128,7 +95,6 @@ export class UploadsController {
                     status: 200,
                     uploads: arquivosComBase64
                 });
-            });
     }
 
     async obterRelatorioDashboard(request: Request, response: Response, next: NextFunction) {
