@@ -263,6 +263,52 @@ export class UsuarioController {
         }
     }
 
+    //mudar o status do usuário
+    async alterarSenha(request: Request, response: Response, next: NextFunction) {
+        try{
+
+            const { idUsuario, novaSenha, senha } = request.body;
+            const usuario = await this.userRepository.findOneBy({
+                id: idUsuario
+            });
+
+            if (!usuario) {
+                return response.status(400).send({
+                    mensagem: 'Usuário inexistente!',
+                    status: 400
+                });
+            }
+
+            const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
+
+            if (!senhaCorreta) {
+                return response.status(401).send({
+                     mensagem: 'Senha atual incorreta.' ,
+                     status: 401
+                    });
+            }
+
+            // Criptografar a senha antes de salvá-la no banco de dados
+            const hashedPassword = await bcrypt.hash(novaSenha, 10);
+
+            usuario.senha = hashedPassword;
+            
+            await this.userRepository.save(usuario);
+
+            return response.status(200).send({
+                mensagem: 'Senha atualizada com sucesso!',
+                status: 200
+            });
+
+        }
+        catch (error) {
+            return response.status(500).send({
+                mensagem: 'Erro ao alterar a senha, tente novamente mais tarde.',
+                status: 500
+             });
+        }
+    }
+
 
     //editar usuário
     //pegar usuário já existente e poder modificar, busco pelo id

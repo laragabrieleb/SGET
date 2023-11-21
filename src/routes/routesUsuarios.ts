@@ -47,4 +47,10 @@ export const routesUsuarios = [{
     route: "/usuario/status",
     controller: UsuarioController,
     action: "statusUsuario"
+},
+{
+method: "put",
+route: "/usuario/alterar-senha",
+controller: UsuarioController,
+action: "alterarSenha"
 }]
